@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readability/article.dart';
 import 'dart:async';
 
 import 'package:readability/readability.dart' as readability;
@@ -15,14 +16,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late int sumResult;
-  late Future<int> sumAsyncResult;
+  late Future<readability.ArticleResponse> readabilityResult;
 
   @override
   void initState() {
     super.initState();
-    sumResult = readability.sum(1, 2);
-    sumAsyncResult = readability.sumAsync(3, 4);
+    readabilityResult = readability.parseAsync('https://www.bbc.com/sport/football/articles/cl7y4z82z2do');
   }
 
   @override
@@ -46,17 +45,11 @@ class _MyAppState extends State<MyApp> {
                   textAlign: TextAlign.center,
                 ),
                 spacerSmall,
-                Text(
-                  'sum(1, 2) = $sumResult',
-                  style: textStyle,
-                  textAlign: TextAlign.center,
-                ),
-                spacerSmall,
-                FutureBuilder<int>(
-                  future: sumAsyncResult,
-                  builder: (BuildContext context, AsyncSnapshot<int> value) {
+                FutureBuilder<readability.ArticleResponse>(
+                  future: readabilityResult,
+                  builder: (BuildContext context, AsyncSnapshot<readability.ArticleResponse> value) {
                     final displayValue =
-                        (value.hasData) ? value.data : 'loading';
+                        (value.hasData) ? value.data?.article.content : 'loading';
                     return Text(
                       'await sumAsync(3, 4) = $displayValue',
                       style: textStyle,
