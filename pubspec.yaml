@@ -1,6 +1,6 @@
 name: readability
-description: "A new Flutter FFI plugin project."
-version: 0.0.1
+description: "A Flutter wrapper for https://github.com/go-shiori/go-readability"
+version: 0.0.2
 homepage: https://git.kat.directory/SphericalKat/readability-dart
 
 environment:
@@ -26,12 +26,6 @@ dev_dependencies:
 flutter:
   plugin:
     platforms:
-    # This FFI plugin project was generated without specifying any
-    # platforms with the `--platform` argument. If you see the `some_platform` map below, remove it and
-    # then add platforms following the instruction here:
-    # https://flutter.dev/docs/development/packages-and-plugins/developing-packages#plugin-platforms
-    # -------------------
-
       android:
         pluginClass: ReadabilityPlugin
         ffiPlugin: true
