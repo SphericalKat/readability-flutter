@@ -8,6 +8,8 @@
 // ignore_for_file: type=lint
 import 'dart:ffi' as ffi;
 
+import 'package:ffi/ffi.dart';
+
 /// Bindings for `src/readability.h`.
 ///
 /// Regenerate bindings with `dart run ffigen --config ffigen.yaml`.
@@ -27,44 +29,92 @@ class ReadabilityBindings {
           lookup)
       : _lookup = lookup;
 
-  /// A very short-lived native function.
-  ///
-  /// For very short-lived functions, it is fine to call them on the main isolate.
-  /// They will block the Dart execution while running the native function, so
-  /// only do this for native functions which are guaranteed to be short-lived.
-  int sum(
-    int a,
-    int b,
+  CArticle Parse(
+    ffi.Pointer<Utf8> url,
   ) {
-    return _sum(
-      a,
-      b,
+    return _Parse(
+      url,
     );
   }
 
-  late final _sumPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-          'sum');
-  late final _sum = _sumPtr.asFunction<int Function(int, int)>();
+  late final _ParsePtr =
+      _lookup<ffi.NativeFunction<CArticle Function(ffi.Pointer<Utf8>)>>(
+          'Parse');
+  late final _Parse =
+      _ParsePtr.asFunction<CArticle Function(ffi.Pointer<Utf8>)>();
 
-  /// A longer lived native function, which occupies the thread calling it.
-  ///
-  /// Do not call these kind of native functions in the main isolate. They will
-  /// block Dart execution. This will cause dropped frames in Flutter applications.
-  /// Instead, call these native functions on a separate isolate.
-  int sum_long_running(
-    int a,
-    int b,
+  void FreeArticle(
+    CArticle article,
   ) {
-    return _sum_long_running(
-      a,
-      b,
+    return _FreeArticle(
+      article,
     );
   }
 
-  late final _sum_long_runningPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-          'sum_long_running');
-  late final _sum_long_running =
-      _sum_long_runningPtr.asFunction<int Function(int, int)>();
+  late final _FreeArticlePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(CArticle)>>('FreeArticle');
+  late final _FreeArticle =
+      _FreeArticlePtr.asFunction<void Function(CArticle)>();
 }
+
+final class _GoString_ extends ffi.Struct {
+  external ffi.Pointer<Utf8> p;
+
+  @ptrdiff_t()
+  external int n;
+}
+
+typedef ptrdiff_t = ffi.Long;
+typedef Dartptrdiff_t = int;
+
+final class CArticle extends ffi.Struct {
+  external ffi.Pointer<Utf8> title;
+
+  external ffi.Pointer<Utf8> author;
+
+  @ffi.Int()
+  external int length;
+
+  external ffi.Pointer<Utf8> excerpt;
+
+  external ffi.Pointer<Utf8> site_name;
+
+  external ffi.Pointer<Utf8> image_url;
+
+  external ffi.Pointer<Utf8> favicon_url;
+
+  /// HTML content
+  external ffi.Pointer<Utf8> content;
+
+  /// text content
+  external ffi.Pointer<Utf8> text_content;
+
+  external ffi.Pointer<Utf8> language;
+
+  external ffi.Pointer<Utf8> published_time;
+
+  external ffi.Pointer<Utf8> err;
+
+  @ffi.Int()
+  external int success;
+}
+
+final class GoInterface extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> t;
+
+  external ffi.Pointer<ffi.Void> v;
+}
+
+final class GoSlice extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> data;
+
+  @GoInt()
+  external int len;
+
+  @GoInt()
+  external int cap;
+}
+
+typedef GoInt = GoInt64;
+typedef GoInt64 = ffi.LongLong;
+typedef DartGoInt64 = int;

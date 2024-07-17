@@ -9,6 +9,8 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:ffi/ffi.dart';
+import 'package:readability/article.dart';
 
 import 'readability_bindings_generated.dart';
 
@@ -17,7 +19,7 @@ import 'readability_bindings_generated.dart';
 /// For very short-lived functions, it is fine to call them on the main isolate.
 /// They will block the Dart execution while running the native function, so
 /// only do this for native functions which are guaranteed to be short-lived.
-int sum(int a, int b) => _bindings.sum(a, b);
+// int sum(int a, int b) => _bindings.sum(a, b);
 
 /// A longer lived native function, which occupies the thread calling it.
 ///
@@ -29,12 +31,12 @@ int sum(int a, int b) => _bindings.sum(a, b);
 ///
 /// 1. Reuse a single isolate for various different kinds of requests.
 /// 2. Use multiple helper isolates for parallel execution.
-Future<int> sumAsync(int a, int b) async {
+Future<ArticleResponse> parseAsync(String url) async {
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
-  final int requestId = _nextSumRequestId++;
-  final _SumRequest request = _SumRequest(requestId, a, b);
-  final Completer<int> completer = Completer<int>();
-  _sumRequests[requestId] = completer;
+  final int requestId = _nextParseRequestId++;
+  final _ParseRequest request = _ParseRequest(url, requestId);
+  final Completer<ArticleResponse> completer = Completer<ArticleResponse>();
+  _parseRequests[requestId] = completer;
   helperIsolateSendPort.send(request);
   return completer.future;
 }
@@ -58,33 +60,32 @@ final DynamicLibrary _dylib = () {
 /// The bindings to the native functions in [_dylib].
 final ReadabilityBindings _bindings = ReadabilityBindings(_dylib);
 
-
 /// A request to compute `sum`.
 ///
 /// Typically sent from one isolate to another.
-class _SumRequest {
+class _ParseRequest {
+  final String url;
   final int id;
-  final int a;
-  final int b;
 
-  const _SumRequest(this.id, this.a, this.b);
+  const _ParseRequest(this.url, this.id);
 }
 
-/// A response with the result of `sum`.
-///
-/// Typically sent from one isolate to another.
-class _SumResponse {
+class ArticleResponse {
+  final Article article;
   final int id;
-  final int result;
 
-  const _SumResponse(this.id, this.result);
+  ArticleResponse({
+    required this.article,
+    required this.id,
+  });
 }
 
-/// Counter to identify [_SumRequest]s and [_SumResponse]s.
-int _nextSumRequestId = 0;
+/// Counter to identify [_ParseRequest]s and [ArticleResponse]s.
+int _nextParseRequestId = 0;
 
-/// Mapping from [_SumRequest] `id`s to the completers corresponding to the correct future of the pending request.
-final Map<int, Completer<int>> _sumRequests = <int, Completer<int>>{};
+/// Mapping from [_ParseRequest] `id`s to the completers corresponding to the correct future of the pending request.
+final Map<int, Completer<ArticleResponse>> _parseRequests =
+    <int, Completer<ArticleResponse>>{};
 
 /// The SendPort belonging to the helper isolate.
 Future<SendPort> _helperIsolateSendPort = () async {
@@ -103,11 +104,11 @@ Future<SendPort> _helperIsolateSendPort = () async {
         completer.complete(data);
         return;
       }
-      if (data is _SumResponse) {
+      if (data is ArticleResponse) {
         // The helper isolate sent us a response to a request we sent.
-        final Completer<int> completer = _sumRequests[data.id]!;
-        _sumRequests.remove(data.id);
-        completer.complete(data.result);
+        final Completer<ArticleResponse> completer = _parseRequests[data.id]!;
+        _parseRequests.remove(data.id);
+        completer.complete(data);
         return;
       }
       throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
@@ -118,10 +119,53 @@ Future<SendPort> _helperIsolateSendPort = () async {
     final ReceivePort helperReceivePort = ReceivePort()
       ..listen((dynamic data) {
         // On the helper isolate listen to requests and respond to them.
-        if (data is _SumRequest) {
-          final int result = _bindings.sum_long_running(data.a, data.b);
-          final _SumResponse response = _SumResponse(data.id, result);
-          sendPort.send(response);
+        if (data is _ParseRequest) {
+          final urlPointer = data.url.toNativeUtf8();
+          final CArticle article = _bindings.Parse(urlPointer);
+
+          // Free the native string.
+          calloc.free(urlPointer);
+
+          // Convert the native article to a Dart article.
+          final articleDart = Article(
+            title:
+                article.title == nullptr ? null : article.title.toDartString(),
+            author: article.author == nullptr
+                ? null
+                : article.author.toDartString(),
+            length: article.length,
+            excerpt: article.excerpt == nullptr
+                ? null
+                : article.excerpt.toDartString(),
+            siteName: article.site_name == nullptr
+                ? null
+                : article.site_name.toDartString(),
+            imageUrl: article.image_url == nullptr
+                ? null
+                : article.image_url.toDartString(),
+            faviconUrl: article.favicon_url == nullptr
+                ? null
+                : article.favicon_url.toDartString(),
+            content: article.content == nullptr
+                ? null
+                : article.content.toDartString(),
+            textContent: article.text_content == nullptr
+                ? null
+                : article.text_content.toDartString(),
+            language: article.language == nullptr
+                ? null
+                : article.language.toDartString(),
+            publishedTime: article.published_time == nullptr
+                ? null
+                : article.published_time.toDartString(),
+          );
+          ArticleResponse articleDartResponse =
+              ArticleResponse(article: articleDart, id: data.id);
+
+          // Free the native article.
+          _bindings.FreeArticle(article);
+
+          sendPort.send(articleDartResponse);
           return;
         }
         throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
