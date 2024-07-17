@@ -35,6 +35,6 @@ flutter:
       android:
         pluginClass: ReadabilityPlugin
         ffiPlugin: true
-      ios:
-        pluginClass: ReadabilityPlugin
-        ffiPlugin: true
+      # ios:
+      #   pluginClass: ReadabilityPlugin
+      #   ffiPlugin: true
