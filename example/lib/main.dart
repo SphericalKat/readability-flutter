@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:readability/article.dart';
 import 'dart:async';
 
 import 'package:readability/readability.dart' as readability;
@@ -38,22 +37,26 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                const Text(
-                  'This calls a native function through FFI that is shipped as source in the package. '
-                  'The native code is built as part of the Flutter Runner build.',
-                  style: textStyle,
-                  textAlign: TextAlign.center,
-                ),
-                spacerSmall,
                 FutureBuilder<readability.ArticleResponse>(
                   future: readabilityResult,
                   builder: (BuildContext context, AsyncSnapshot<readability.ArticleResponse> value) {
-                    final displayValue =
-                        (value.hasData) ? value.data?.article.content : 'loading';
-                    return Text(
-                      'await sumAsync(3, 4) = $displayValue',
-                      style: textStyle,
-                      textAlign: TextAlign.center,
+                    final textContent =
+                        (value.hasData) ? value.data?.article.textContent : 'loading';
+                    final title = 
+                        (value.hasData) ? value.data?.article.title : 'loading';
+
+                    return Column(
+                      children: [
+                        Text(
+                          title ?? '',
+                          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                        ),
+                        spacerSmall,
+                        Text(
+                          textContent ?? '',
+                          style: textStyle,
+                        ),
+                      ],
                     );
                   },
                 ),
