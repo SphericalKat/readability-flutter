@@ -31,14 +31,14 @@ import 'readability_bindings_generated.dart';
 ///
 /// 1. Reuse a single isolate for various different kinds of requests.
 /// 2. Use multiple helper isolates for parallel execution.
-Future<ArticleResponse> parseAsync(String url) async {
+Future<Article> parseAsync(String url) async {
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
   final int requestId = _nextParseRequestId++;
   final _ParseRequest request = _ParseRequest(url, requestId);
   final Completer<ArticleResponse> completer = Completer<ArticleResponse>();
   _parseRequests[requestId] = completer;
   helperIsolateSendPort.send(request);
-  return completer.future;
+  return completer.future.then((ArticleResponse response) => response.article);
 }
 
 const String _libName = 'readability';

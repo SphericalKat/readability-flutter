@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:readability/article.dart';
 import 'dart:async';
 
 import 'package:readability/readability.dart' as readability;
@@ -15,7 +16,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<readability.ArticleResponse> readabilityResult;
+  late Future<Article> readabilityResult;
 
   @override
   void initState() {
@@ -37,13 +38,13 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                FutureBuilder<readability.ArticleResponse>(
+                FutureBuilder<Article>(
                   future: readabilityResult,
-                  builder: (BuildContext context, AsyncSnapshot<readability.ArticleResponse> value) {
+                  builder: (BuildContext context, AsyncSnapshot<Article> value) {
                     final textContent =
-                        (value.hasData) ? value.data?.article.textContent : 'loading';
+                        (value.hasData) ? value.data?.textContent : 'loading';
                     final title = 
-                        (value.hasData) ? value.data?.article.title : 'loading';
+                        (value.hasData) ? value.data?.title : 'loading';
 
                     return Column(
                       children: [

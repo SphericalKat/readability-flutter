@@ -1,6 +1,6 @@
 name: readability
 description: "A Flutter wrapper for https://github.com/go-shiori/go-readability"
-version: 0.0.2
+version: 0.2.0
 homepage: https://git.kat.directory/SphericalKat/readability-dart
 
 environment:
@@ -19,16 +19,12 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
   plugin:
     platforms:
       android:
-        pluginClass: ReadabilityPlugin
         ffiPlugin: true
-      # ios:
-      #   pluginClass: ReadabilityPlugin
-      #   ffiPlugin: true
+      ios:
+        ffiPlugin: true
+      macos:
+        ffiPlugin: true
